@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "GoldTimerApi": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7277",
+      "launchBrowser": false
+    }
+  }
+}
