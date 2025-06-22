@@ -19,22 +19,18 @@ public class GoldHistoryRepository : IGoldHistoryRepository
 
     public async Task<bool> AddGoldHistoryAsync()
     {
-        // First check if there's already a record for today
         if (await HasTodayRecordAsync())
         {
             throw new InvalidOperationException("A gold history record already exists for today's date.");
         }
 
-        // Fetch gold price data from API
         var goldPriceDataJson = await _apiFetch.GetGoldPriceFilteredAsync();
 
-        // Check if we got an error message back
         if (goldPriceDataJson.StartsWith("Request error") || goldPriceDataJson.StartsWith("Unexpected error"))
         {
             throw new InvalidOperationException($"Unable to fetch gold price data: {goldPriceDataJson}");
         }
 
-        // Deserialize the JSON response
         var options = new JsonSerializerOptions();
         options.Converters.Add(new TimestampConverter());
         var goldPriceData = JsonSerializer.Deserialize<GoldPriceData>(goldPriceDataJson, options);
@@ -44,28 +40,22 @@ public class GoldHistoryRepository : IGoldHistoryRepository
             throw new InvalidOperationException("Failed to parse gold price data.");
         }
 
-        // Insert the gold history record
         using (var connection = new SqlConnection(_connectionString))
         {
             await connection.OpenAsync();
             try
             {
-                // Start a transaction to ensure both the insert and the stored procedure call succeed
                 using (var transaction = connection.BeginTransaction())
                 {
                     try
                     {
                         await InsertGoldHistoryAsync(connection, goldPriceData, transaction);
-
-                        // Call the stored procedure to update product prices
                         await UpdateProductPricesBasedOnGoldPriceAsync(connection, transaction);
 
-                        // Commit the transaction
                         transaction.Commit();
                     }
                     catch (Exception ex)
                     {
-                        // Rollback if any error occurs
                         transaction.Rollback();
                         _logger.LogError(ex, "Failed to add gold history record or update product prices.");
                         throw;
@@ -119,14 +109,9 @@ public class GoldHistoryRepository : IGoldHistoryRepository
 
     private async Task UpdateProductPricesBasedOnGoldPriceAsync(SqlConnection connection, SqlTransaction transaction)
     {
-        // Call the stored procedure dbo.UpdateProductPricesBasedOnGoldPrice
         using (var command = new SqlCommand("dbo.UpdateProductPricesBasedOnGoldPrice", connection, transaction))
         {
             command.CommandType = CommandType.StoredProcedure;
-
-            // If your stored procedure requires parameters, add them here
-            // command.Parameters.AddWithValue("@YourParameter", yourValue);
-
             await command.ExecuteNonQueryAsync();
         }
     }

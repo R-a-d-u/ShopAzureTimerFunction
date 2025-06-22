@@ -10,16 +10,12 @@ var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
     .ConfigureServices((context, services) =>
     {
-        // Register HttpClientFactory
+      
         services.AddHttpClient();
-
-        // Register configuration
         var configuration = context.Configuration;
 
-        // Register GoldApiFetch
         services.AddSingleton<GoldApiFetch>();
 
-        // Register GoldHistoryRepository with connection string
         services.AddScoped<IGoldHistoryRepository>(provider =>
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection");
@@ -29,7 +25,6 @@ var host = new HostBuilder()
             return new GoldHistoryRepository(connectionString, apiFetch, logger);
         });
 
-        // Register other services as needed
     })
     .Build();
 

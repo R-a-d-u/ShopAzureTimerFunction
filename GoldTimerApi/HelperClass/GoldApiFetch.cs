@@ -37,7 +37,6 @@ namespace GoldFetchTimer.HelperClass
                 using JsonDocument doc = JsonDocument.Parse(jsonResponse);
                 JsonElement root = doc.RootElement;
 
-                // Extract the required fields
                 var filteredData = new
                 {
                     Metal = root.GetProperty("metal").GetString(),
@@ -48,7 +47,6 @@ namespace GoldFetchTimer.HelperClass
                     Exchange = root.GetProperty("exchange").GetString()
                 };
 
-                // Convert back to JSON string
                 return JsonSerializer.Serialize(filteredData, new JsonSerializerOptions { WriteIndented = true });
             }
             catch (HttpRequestException ex)
